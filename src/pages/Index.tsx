@@ -56,7 +56,7 @@ export default function Index() {
                 </Button>
               </Link>
               <Link to="/b2b">
-                <Button size="lg" variant="outline" className="border-primary-foreground/30 !text-primary-foreground hover:bg-primary-foreground/10">
+                <Button size="lg" className="bg-transparent border border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
                   B2B партнёрам
                 </Button>
               </Link>
