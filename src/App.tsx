@@ -16,6 +16,7 @@ import About from "./pages/About";
 import Delivery from "./pages/Delivery";
 import B2B from "./pages/B2B";
 import Contacts from "./pages/Contacts";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/delivery" element={<Delivery />} />
               <Route path="/b2b" element={<B2B />} />
               <Route path="/contacts" element={<Contacts />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </CartProvider>

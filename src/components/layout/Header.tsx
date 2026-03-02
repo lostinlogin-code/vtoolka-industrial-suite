@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, User, Menu, X, Phone, Wrench } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X, Phone, Wrench, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
+import { useAdmin } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 export default function Header() {
   const { user, isB2B, signOut } = useAuth();
   const { totalItems } = useCart();
+  const { isAdmin } = useAdmin();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
@@ -79,6 +81,11 @@ export default function Header() {
 
           {user ? (
             <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="ghost" size="icon" title="Админ-панель"><ShieldCheck className="w-5 h-5 text-accent" /></Button>
+                </Link>
+              )}
               <Link to="/dashboard">
                 <Button variant="ghost" size="icon"><User className="w-5 h-5" /></Button>
               </Link>
