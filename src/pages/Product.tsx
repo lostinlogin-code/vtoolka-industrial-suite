@@ -8,6 +8,7 @@ import { useCart } from "@/contexts/CartContext";
 import { ShoppingCart, Package, FileText, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 export default function Product() {
@@ -34,7 +35,21 @@ export default function Product() {
     enabled: !!id,
   });
 
-  if (isLoading) return <Layout><div className="container py-12 text-center text-muted-foreground">Загрузка...</div></Layout>;
+  if (isLoading) return (
+    <Layout>
+      <div className="container py-6">
+        <div className="grid md:grid-cols-2 gap-8">
+          <Skeleton className="aspect-square rounded-lg" />
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-32 w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
   if (!product) return <Layout><div className="container py-12 text-center text-muted-foreground">Товар не найден</div></Layout>;
 
   const price = isB2B ? Number(product.price_wholesale) : Number(product.price_retail);
@@ -165,7 +180,9 @@ export default function Product() {
         {analogs && analogs.length > 0 && (
           <section className="mt-10">
             <h2 className="text-xl font-display font-bold mb-4">Сравнение с аналогами</h2>
-            <div className="bg-card border rounded-lg overflow-x-auto">
+
+            {/* Desktop table */}
+            <div className="hidden md:block bg-card border rounded-lg overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-secondary">
                   <tr>
@@ -177,7 +194,6 @@ export default function Product() {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Current product */}
                   <tr className="bg-accent/5 border-b">
                     <td className="px-4 py-2.5 font-mono font-semibold">{product.sku}</td>
                     <td className="px-4 py-2.5 font-medium">{product.name}</td>
@@ -196,6 +212,28 @@ export default function Product() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-3">
+              <div className="bg-accent/5 border border-accent/20 rounded-lg p-3">
+                <span className="sku-badge">{product.sku}</span>
+                <p className="font-medium text-sm mt-1">{product.name}</p>
+                <p className="text-xs text-muted-foreground">{product.brand}</p>
+                <p className="font-semibold text-accent mt-1">{price.toLocaleString("ru-RU")} ₽</p>
+                <span className="text-accent text-xs font-medium">← Наш товар</span>
+              </div>
+              {analogs.map((a) => (
+                <div key={a.id} className="bg-card border rounded-lg p-3">
+                  <span className="font-mono text-xs text-muted-foreground">{a.analog_sku}</span>
+                  <p className="text-sm mt-1">{a.analog_name}</p>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-xs text-muted-foreground">{a.analog_brand}</span>
+                    <span className="text-sm font-medium">{a.analog_price ? `${Number(a.analog_price).toLocaleString("ru-RU")} ₽` : "—"}</span>
+                  </div>
+                  {a.notes && <p className="text-xs text-muted-foreground mt-1">{a.notes}</p>}
+                </div>
+              ))}
             </div>
           </section>
         )}

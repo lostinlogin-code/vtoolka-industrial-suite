@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileDown, Package, User } from "lucide-react";
+import { Package, User } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
@@ -84,10 +84,13 @@ export default function Dashboard() {
 
           {/* Orders */}
           <div className="bg-card border rounded-lg p-6">
-            <h2 className="font-semibold mb-4 flex items-center gap-2"><Package className="w-4 h-4" /> История заказов</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold flex items-center gap-2"><Package className="w-4 h-4" /> Последние заказы</h2>
+              <Link to="/orders" className="text-xs text-accent hover:underline">Все заказы →</Link>
+            </div>
             {orders && orders.length > 0 ? (
               <div className="space-y-3">
-                {orders.map((o) => (
+                {orders.slice(0, 3).map((o) => (
                   <div key={o.id} className="border rounded p-3 text-sm">
                     <div className="flex justify-between">
                       <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
@@ -97,9 +100,6 @@ export default function Dashboard() {
                       <span className="capitalize">{o.status}</span>
                       <span className="font-semibold">{Number(o.total).toLocaleString("ru-RU")} ₽</span>
                     </div>
-                    <Button variant="ghost" size="sm" className="mt-2 text-xs w-full" onClick={() => toast.success("Счёт скачан (mock)")}>
-                      <FileDown className="w-3 h-3 mr-1" /> Скачать счёт
-                    </Button>
                   </div>
                 ))}
               </div>

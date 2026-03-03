@@ -132,6 +132,19 @@ export default function Header() {
             <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="py-2 text-muted-foreground">О компании</Link>
             <Link to="/b2b" onClick={() => setMobileMenuOpen(false)} className="py-2 text-accent">B2B партнёрам</Link>
             <Link to="/contacts" onClick={() => setMobileMenuOpen(false)} className="py-2 text-muted-foreground">Контакты</Link>
+            {user && (
+              <>
+                <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="py-2 text-muted-foreground">Личный кабинет</Link>
+                <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="py-2 text-muted-foreground">Мои заказы</Link>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="py-2 text-accent">Админ-панель</Link>
+                )}
+                <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="py-2 text-left text-muted-foreground">Выйти</button>
+              </>
+            )}
+            {!user && (
+              <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="py-2 font-medium text-accent">Войти</Link>
+            )}
           </div>
         </div>
       )}
