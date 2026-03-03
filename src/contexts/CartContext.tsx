@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export interface CartItem {
   id: string;
@@ -20,10 +20,30 @@ interface CartContextType {
   totalPrice: number;
 }
 
+const CART_STORAGE_KEY = "vtoolka_cart";
+
+function loadCart(): CartItem[] {
+  try {
+    const stored = localStorage.getItem(CART_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return [];
+}
+
+function saveCart(items: CartItem[]) {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch {}
+}
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(loadCart);
+
+  useEffect(() => {
+    saveCart(items);
+  }, [items]);
 
   const addItem = (item: Omit<CartItem, "quantity">, quantity = 1) => {
     setItems((prev) => {

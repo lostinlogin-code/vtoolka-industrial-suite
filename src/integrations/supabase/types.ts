@@ -252,6 +252,7 @@ export type Database = {
           id: string
           inn: string | null
           is_b2b: boolean
+          legal_address: string | null
           phone: string | null
           updated_at: string
         }
@@ -264,6 +265,7 @@ export type Database = {
           id: string
           inn?: string | null
           is_b2b?: boolean
+          legal_address?: string | null
           phone?: string | null
           updated_at?: string
         }
@@ -276,6 +278,7 @@ export type Database = {
           id?: string
           inn?: string | null
           is_b2b?: boolean
+          legal_address?: string | null
           phone?: string | null
           updated_at?: string
         }
