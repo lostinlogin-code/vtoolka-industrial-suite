@@ -18,6 +18,7 @@ import B2B from "./pages/B2B";
 import Contacts from "./pages/Contacts";
 import Admin from "./pages/Admin";
 import Orders from "./pages/Orders";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/contacts" element={<Contacts />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </CartProvider>

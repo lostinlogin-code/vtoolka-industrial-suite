@@ -307,6 +307,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_profiles: {
+        Args: never
+        Returns: {
+          company_name: string | null
+          created_at: string
+          discount_tier: number
+          email: string | null
+          full_name: string | null
+          id: string
+          inn: string | null
+          is_b2b: boolean
+          legal_address: string | null
+          phone: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

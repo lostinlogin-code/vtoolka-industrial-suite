@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Building2, UserRound } from "lucide-react";
 
@@ -226,6 +227,26 @@ export default function Auth() {
             <Button type="submit" disabled={loading} className="w-full bg-accent text-accent-foreground hover:bg-industrial-orange-hover font-semibold">
               {loading ? "Загрузка..." : isLogin ? "Войти" : "Зарегистрироваться"}
             </Button>
+
+            {isLogin && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!emailRegex.test(email)) {
+                    toast.error("Введите email для сброса пароля");
+                    return;
+                  }
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                  });
+                  if (error) toast.error(error.message);
+                  else toast.success("Письмо для сброса пароля отправлено!");
+                }}
+                className="w-full text-center text-sm text-muted-foreground hover:text-accent transition-colors"
+              >
+                Забыли пароль?
+              </button>
+            )}
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-4">

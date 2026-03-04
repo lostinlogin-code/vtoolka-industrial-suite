@@ -10,41 +10,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, ShieldCheck, Package, FolderTree, ClipboardList } from "lucide-react";
+import { Plus, Pencil, Trash2, ShieldCheck, Package, FolderTree, ClipboardList, BarChart3, Users } from "lucide-react";
+import ImageUploader from "@/components/admin/ImageUploader";
+import AnalyticsTab from "@/components/admin/AnalyticsTab";
+import UsersTab from "@/components/admin/UsersTab";
 
 export default function Admin() {
   const { user } = useAuth();
   const { isAdmin, isLoading } = useAdmin();
   const navigate = useNavigate();
 
-  if (!user) {
-    navigate("/auth");
-    return null;
-  }
-
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="container py-12 text-center text-muted-foreground">Загрузка...</div>
-      </Layout>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <Layout>
-        <div className="container py-12 text-center">
-          <ShieldCheck className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h1 className="text-xl font-bold mb-2">Доступ запрещён</h1>
-          <p className="text-muted-foreground">У вас нет прав администратора.</p>
-        </div>
-      </Layout>
-    );
-  }
+  if (!user) { navigate("/auth"); return null; }
+  if (isLoading) return <Layout><div className="container py-12 text-center text-muted-foreground">Загрузка...</div></Layout>;
+  if (!isAdmin) return (
+    <Layout><div className="container py-12 text-center">
+      <ShieldCheck className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+      <h1 className="text-xl font-bold mb-2">Доступ запрещён</h1>
+      <p className="text-muted-foreground">У вас нет прав администратора.</p>
+    </div></Layout>
+  );
 
   return (
     <Layout>
@@ -52,17 +40,19 @@ export default function Admin() {
         <h1 className="text-2xl font-display font-bold mb-6 flex items-center gap-2">
           <ShieldCheck className="w-6 h-6 text-accent" /> Админ-панель
         </h1>
-
         <Tabs defaultValue="products">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 flex-wrap">
             <TabsTrigger value="products" className="gap-1"><Package className="w-4 h-4" /> Товары</TabsTrigger>
             <TabsTrigger value="categories" className="gap-1"><FolderTree className="w-4 h-4" /> Категории</TabsTrigger>
             <TabsTrigger value="orders" className="gap-1"><ClipboardList className="w-4 h-4" /> Заказы</TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-1"><BarChart3 className="w-4 h-4" /> Аналитика</TabsTrigger>
+            <TabsTrigger value="users" className="gap-1"><Users className="w-4 h-4" /> Пользователи</TabsTrigger>
           </TabsList>
-
           <TabsContent value="products"><ProductsTab /></TabsContent>
           <TabsContent value="categories"><CategoriesTab /></TabsContent>
           <TabsContent value="orders"><OrdersTab /></TabsContent>
+          <TabsContent value="analytics"><AnalyticsTab /></TabsContent>
+          <TabsContent value="users"><UsersTab /></TabsContent>
         </Tabs>
       </div>
     </Layout>
@@ -96,20 +86,21 @@ function ProductsTab() {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      toast.success("Товар удалён");
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-products"] }); toast.success("Товар удалён"); },
     onError: () => toast.error("Ошибка удаления"),
   });
 
   const saveMutation = useMutation({
     mutationFn: async (product: any) => {
-      if (product.id) {
-        const { error } = await supabase.from("products").update(product).eq("id", product.id);
+      // Set image_url to first image if available
+      const images = product.images || [];
+      const toSave = { ...product, image_url: images[0] || product.image_url || null };
+
+      if (toSave.id) {
+        const { error } = await supabase.from("products").update(toSave).eq("id", toSave.id);
         if (error) throw error;
       } else {
-        const { id, ...rest } = product;
+        const { id, ...rest } = toSave;
         const { error } = await supabase.from("products").insert(rest);
         if (error) throw error;
       }
@@ -124,12 +115,12 @@ function ProductsTab() {
   });
 
   const openNew = () => {
-    setEditProduct({ sku: "", name: "", brand: "", description: "", price_retail: 0, price_wholesale: 0, stock_level: 0, category_id: null });
+    setEditProduct({ sku: "", name: "", brand: "", description: "", price_retail: 0, price_wholesale: 0, stock_level: 0, category_id: null, images: [], image_url: null });
     setDialogOpen(true);
   };
 
   const openEdit = (p: any) => {
-    setEditProduct({ ...p });
+    setEditProduct({ ...p, images: p.images || (p.image_url ? [p.image_url] : []) });
     setDialogOpen(true);
   };
 
@@ -141,16 +132,16 @@ function ProductsTab() {
           <Plus className="w-4 h-4" /> Добавить товар
         </Button>
       </div>
-
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Фото</TableHead>
               <TableHead>Артикул</TableHead>
               <TableHead>Название</TableHead>
               <TableHead>Бренд</TableHead>
-              <TableHead className="text-right">Розн. цена</TableHead>
-              <TableHead className="text-right">Опт. цена</TableHead>
+              <TableHead className="text-right">Розн.</TableHead>
+              <TableHead className="text-right">Опт.</TableHead>
               <TableHead className="text-right">Остаток</TableHead>
               <TableHead></TableHead>
             </TableRow>
@@ -158,6 +149,13 @@ function ProductsTab() {
           <TableBody>
             {products?.map((p) => (
               <TableRow key={p.id}>
+                <TableCell>
+                  {p.image_url ? (
+                    <img src={p.image_url} alt="" className="w-10 h-10 rounded object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded bg-muted" />
+                  )}
+                </TableCell>
                 <TableCell className="font-mono text-xs">{p.sku}</TableCell>
                 <TableCell className="max-w-[200px] truncate">{p.name}</TableCell>
                 <TableCell>{p.brand}</TableCell>
@@ -181,17 +179,12 @@ function ProductsTab() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editProduct?.id ? "Редактировать товар" : "Новый товар"}</DialogTitle>
           </DialogHeader>
           {editProduct && (
-            <ProductForm
-              product={editProduct}
-              categories={categories ?? []}
-              onSave={(p) => saveMutation.mutate(p)}
-              saving={saveMutation.isPending}
-            />
+            <ProductForm product={editProduct} categories={categories ?? []} onSave={(p) => saveMutation.mutate(p)} saving={saveMutation.isPending} />
           )}
         </DialogContent>
       </Dialog>
@@ -221,13 +214,17 @@ function ProductForm({ product, categories, onSave, saving }: { product: any; ca
         <Select value={form.category_id || ""} onValueChange={(v) => set("category_id", v || null)}>
           <SelectTrigger><SelectValue placeholder="Выберите категорию" /></SelectTrigger>
           <SelectContent>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-            ))}
+            {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
-      <div><Label className="text-xs">URL изображения</Label><Input value={form.image_url || ""} onChange={(e) => set("image_url", e.target.value)} /></div>
+
+      {/* Image uploader */}
+      <div>
+        <Label className="text-xs mb-2 block">Изображения товара</Label>
+        <ImageUploader images={form.images || []} onChange={(imgs) => set("images", imgs)} />
+      </div>
+
       <Button onClick={() => onSave(form)} disabled={saving || !form.sku || !form.name} className="w-full bg-accent text-accent-foreground hover:bg-industrial-orange-hover">
         {saving ? "Сохранение..." : "Сохранить"}
       </Button>
@@ -238,7 +235,6 @@ function ProductForm({ product, categories, onSave, saving }: { product: any; ca
 // ─── Categories Tab ─────────────────────────
 function CategoriesTab() {
   const queryClient = useQueryClient();
-
   const { data: categories } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
@@ -252,10 +248,7 @@ function CategoriesTab() {
       const { error } = await supabase.from("categories").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
-      toast.success("Категория удалена");
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-categories"] }); toast.success("Категория удалена"); },
     onError: () => toast.error("Ошибка удаления"),
   });
 
@@ -294,7 +287,6 @@ function CategoriesTab() {
 // ─── Orders Tab ─────────────────────────────
 function OrdersTab() {
   const queryClient = useQueryClient();
-
   const { data: orders } = useQuery({
     queryKey: ["admin-orders"],
     queryFn: async () => {
@@ -304,11 +296,7 @@ function OrdersTab() {
   });
 
   const statusMap: Record<string, string> = {
-    pending: "Новый",
-    processing: "В обработке",
-    shipped: "Отправлен",
-    completed: "Завершён",
-    cancelled: "Отменён",
+    pending: "Новый", processing: "В обработке", shipped: "Отправлен", completed: "Завершён", cancelled: "Отменён",
   };
 
   const updateStatus = useMutation({
@@ -316,17 +304,14 @@ function OrdersTab() {
       const { error } = await supabase.from("orders").update({ status }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-      toast.success("Статус обновлён");
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-orders"] }); toast.success("Статус обновлён"); },
     onError: () => toast.error("Ошибка"),
   });
 
   return (
     <div>
       <p className="text-sm text-muted-foreground mb-4">{orders?.length ?? 0} заказов</p>
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -348,13 +333,9 @@ function OrdersTab() {
                 <TableCell className="text-right font-semibold">{Number(o.total).toLocaleString("ru-RU")} ₽</TableCell>
                 <TableCell>
                   <Select value={o.status} onValueChange={(v) => updateStatus.mutate({ id: o.id, status: v })}>
-                    <SelectTrigger className="h-8 text-xs w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {Object.entries(statusMap).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
+                      {Object.entries(statusMap).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </TableCell>
