@@ -42,7 +42,7 @@ export default function UsersTab() {
         <span className="text-sm text-muted-foreground">{filtered.length} пользователей</span>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

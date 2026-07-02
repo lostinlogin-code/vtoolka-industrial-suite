@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Check, Truck, CreditCard, User, ArrowLeft } from "lucide-react";
 
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
@@ -61,56 +62,88 @@ export default function Checkout() {
 
   return (
     <Layout>
-      <div className="container max-w-2xl py-6">
+      <div className="container max-w-3xl py-6">
+        <nav className="text-xs text-muted-foreground mb-4">
+          <Link to="/" className="hover:text-foreground">Главная</Link>
+          <span className="mx-1">/</span>
+          <Link to="/cart" className="hover:text-foreground">Корзина</Link>
+          <span className="mx-1">/</span>
+          <span className="text-foreground">Оформление</span>
+        </nav>
         <h1 className="text-2xl font-display font-bold mb-6">Оформление заказа</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-card border rounded-lg p-6 space-y-4">
-            <h2 className="font-semibold">Контактные данные</h2>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Step 1: Contacts */}
+          <div className="bg-card border border-border rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</div>
+              <h2 className="font-semibold flex items-center gap-2"><User className="w-4 h-4" /> Контактные данные</h2>
+            </div>
             <div className="grid sm:grid-cols-2 gap-3">
-              <div><Label className="text-xs">Имя</Label><Input value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} required /></div>
-              <div><Label className="text-xs">Телефон</Label><Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} required /></div>
+              <div><Label className="text-xs">Имя *</Label><Input value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} required className="mt-1" /></div>
+              <div><Label className="text-xs">Телефон *</Label><Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} required className="mt-1" /></div>
             </div>
-            <div><Label className="text-xs">Email</Label><Input value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} required /></div>
+            <div className="mt-3"><Label className="text-xs">Email *</Label><Input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} required className="mt-1" /></div>
           </div>
 
-          <div className="bg-card border rounded-lg p-6 space-y-4">
-            <h2 className="font-semibold">Доставка</h2>
-            <div>
-              <Label className="text-xs">Способ доставки</Label>
-              <Select value={form.delivery_method} onValueChange={(v) => setForm({ ...form, delivery_method: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="СДЭК">СДЭК</SelectItem>
-                  <SelectItem value="ПЭК">ПЭК</SelectItem>
-                  <SelectItem value="Деловые Линии">Деловые Линии</SelectItem>
-                  <SelectItem value="Самовывоз">Самовывоз (Москва)</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Step 2: Delivery */}
+          <div className="bg-card border border-border rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</div>
+              <h2 className="font-semibold flex items-center gap-2"><Truck className="w-4 h-4" /> Доставка</h2>
             </div>
-            <div><Label className="text-xs">Адрес доставки</Label><Input value={form.delivery_address} onChange={(e) => setForm({ ...form, delivery_address: e.target.value })} placeholder="Город, улица, дом" /></div>
-            <div><Label className="text-xs">Комментарий</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Дополнительная информация" /></div>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Способ доставки</Label>
+                <Select value={form.delivery_method} onValueChange={(v) => setForm({ ...form, delivery_method: v })}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="СДЭК">СДЭК — до двери или пункта выдачи</SelectItem>
+                    <SelectItem value="ПЭК">ПЭК — для крупногабаритных грузов</SelectItem>
+                    <SelectItem value="Деловые Линии">Деловые Линии — экономичная доставка</SelectItem>
+                    <SelectItem value="Самовывоз">Самовывоз (Москва)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label className="text-xs">Адрес доставки</Label><Input value={form.delivery_address} onChange={(e) => setForm({ ...form, delivery_address: e.target.value })} placeholder="Город, улица, дом, офис" className="mt-1" /></div>
+              <div><Label className="text-xs">Комментарий к заказу</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Удобное время доставки, доп. информация" className="mt-1" /></div>
+            </div>
           </div>
 
-          {/* Summary */}
-          <div className="bg-card border rounded-lg p-6">
-            <h2 className="font-semibold mb-3">Ваш заказ</h2>
+          {/* Step 3: Summary */}
+          <div className="bg-card border border-border rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</div>
+              <h2 className="font-semibold flex items-center gap-2"><CreditCard className="w-4 h-4" /> Ваш заказ</h2>
+            </div>
             <div className="space-y-2 text-sm">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between">
-                  <span className="text-muted-foreground">{item.name} × {item.quantity}</span>
-                  <span>{(item.price * item.quantity).toLocaleString("ru-RU")} ₽</span>
+                <div key={item.id} className="flex justify-between items-center py-1.5 border-b border-border last:border-0">
+                  <div className="flex-1 min-w-0">
+                    <span className="font-mono text-xs text-muted-foreground mr-2">{item.sku}</span>
+                    <span className="truncate">{item.name}</span>
+                    <span className="text-muted-foreground"> × {item.quantity}</span>
+                  </div>
+                  <span className="font-medium shrink-0 ml-4">{(item.price * item.quantity).toLocaleString("ru-RU")} ₽</span>
                 </div>
               ))}
-              <div className="border-t pt-2 flex justify-between text-lg font-display font-bold">
+              <div className="flex justify-between text-lg font-display font-bold pt-3 border-t border-border">
                 <span>Итого:</span>
                 <span>{totalPrice.toLocaleString("ru-RU")} ₽</span>
               </div>
             </div>
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full bg-accent text-accent-foreground hover:bg-industrial-orange-hover font-semibold text-base py-6">
-            {loading ? "Оформление..." : "Подтвердить заказ"}
-          </Button>
+          <div className="flex gap-3">
+            <Link to="/cart" className="flex-1">
+              <Button variant="outline" className="w-full h-12 border-border hover:bg-secondary">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Назад в корзину
+              </Button>
+            </Link>
+            <Button type="submit" disabled={loading} className="flex-[2] bg-accent text-accent-foreground hover:bg-industrial-orange-hover font-semibold text-base h-12">
+              {loading ? "Оформление..." : "Подтвердить заказ"} <Check className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </form>
       </div>
     </Layout>

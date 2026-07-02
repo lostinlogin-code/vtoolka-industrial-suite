@@ -82,7 +82,7 @@ export default function AnalyticsTab() {
 
       <div className="grid md:grid-cols-3 gap-6">
         {/* Sales chart */}
-        <div className="md:col-span-2 bg-card border rounded-lg p-4">
+        <div className="md:col-span-2 bg-card border border-border rounded-xl p-4">
           <h3 className="font-semibold mb-3 text-sm">Продажи по дням</h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData}>
@@ -96,7 +96,7 @@ export default function AnalyticsTab() {
         </div>
 
         {/* B2B/B2C pie */}
-        <div className="bg-card border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-xl p-4">
           <h3 className="font-semibold mb-3 text-sm">B2B / B2C</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -110,7 +110,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Top products */}
-      <div className="bg-card border rounded-lg p-4">
+      <div className="bg-card border border-border rounded-xl p-4">
         <h3 className="font-semibold mb-3 text-sm">Топ-10 товаров по выручке</h3>
         <div className="space-y-2">
           {topList.map((p, i) => (
@@ -134,8 +134,11 @@ export default function AnalyticsTab() {
 
 function KPICard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="bg-card border rounded-lg p-4">
-      <div className="flex items-center gap-2 text-muted-foreground mb-1">{icon}<span className="text-xs">{label}</span></div>
+    <div className="bg-card border border-border rounded-xl p-4 hover:shadow-card transition-shadow">
+      <div className="flex items-center gap-2 text-muted-foreground mb-2">
+        <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center">{icon}</div>
+        <span className="text-xs">{label}</span>
+      </div>
       <p className="text-xl font-bold font-display">{value}</p>
     </div>
   );
