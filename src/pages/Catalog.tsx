@@ -1,18 +1,26 @@
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
 import ProductCard from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, SlidersHorizontal, Package } from "lucide-react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Search, Package, SlidersHorizontal, X } from "lucide-react";
+import { useState, useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Catalog() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const categorySlug = searchParams.get("category");
   const searchQuery = searchParams.get("search") || "";
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -21,6 +29,7 @@ export default function Catalog() {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -47,7 +56,20 @@ export default function Catalog() {
     enabled: categorySlug ? !!categories : true,
   });
 
-  const brands = [...new Set(products?.map((p) => p.brand).filter(Boolean) ?? [])] as string[];
+  const brands = useMemo(
+    () => [...new Set(products?.map((p) => p.brand).filter(Boolean) ?? [])] as string[],
+    [products],
+  );
+
+  const hasActiveFilters = brandFilter !== "all" || inStockOnly || priceMin !== "" || priceMax !== "" || localSearch !== "";
+
+  const resetFilters = () => {
+    setBrandFilter("all");
+    setInStockOnly(false);
+    setPriceMin("");
+    setPriceMax("");
+    setLocalSearch("");
+  };
 
   const filteredProducts = products
     ?.filter((p) => {
@@ -75,45 +97,133 @@ export default function Catalog() {
 
   const currentCategory = categories?.find((c) => c.slug === categorySlug);
 
+  const FilterPanel = () => (
+    <div className="space-y-1">
+      {/* Кнопка сброса */}
+      {hasActiveFilters && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={resetFilters}
+          className="w-full justify-start text-muted-foreground hover:text-destructive mb-2"
+        >
+          <X className="w-3.5 h-3.5 mr-1" /> Сбросить все фильтры
+        </Button>
+      )}
+
+      <Accordion type="multiple" defaultValue={["brands", "price", "stock"]} className="w-full">
+        {/* Бренды */}
+        <AccordionItem value="brands" className="border-border">
+          <AccordionTrigger className="text-sm font-semibold py-3 hover:no-underline">
+            Бренд
+          </AccordionTrigger>
+          <AccordionContent className="pt-1">
+            <div className="space-y-2">
+              <button
+                onClick={() => setBrandFilter("all")}
+                className={`block w-full text-left text-sm py-1 px-2 rounded transition-colors ${
+                  brandFilter === "all" ? "bg-secondary font-medium" : "text-muted-foreground hover:bg-secondary/50"
+                }`}
+              >
+                Все бренды
+              </button>
+              {brands.map((b) => (
+                <button
+                  key={b}
+                  onClick={() => setBrandFilter(b)}
+                  className={`block w-full text-left text-sm py-1 px-2 rounded transition-colors ${
+                    brandFilter === b ? "bg-secondary font-medium" : "text-muted-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  {b}
+                </button>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Цена */}
+        <AccordionItem value="price" className="border-border">
+          <AccordionTrigger className="text-sm font-semibold py-3 hover:no-underline">
+            Цена
+          </AccordionTrigger>
+          <AccordionContent className="pt-1">
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                placeholder="от 0"
+                className="h-9 text-sm"
+              />
+              <span className="text-muted-foreground text-xs">—</span>
+              <Input
+                type="number"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                placeholder="до ∞"
+                className="h-9 text-sm"
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Наличие */}
+        <AccordionItem value="stock" className="border-b border-border">
+          <AccordionTrigger className="text-sm font-semibold py-3 hover:no-underline">
+            Наличие
+          </AccordionTrigger>
+          <AccordionContent className="pt-1">
+            <div className="flex items-center gap-2 py-1">
+              <Checkbox
+                id="inStock"
+                checked={inStockOnly}
+                onCheckedChange={(v) => setInStockOnly(v === true)}
+              />
+              <Label htmlFor="inStock" className="text-sm text-muted-foreground cursor-pointer">
+                Только в наличии
+              </Label>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
+
   return (
     <Layout>
       <div className="container py-6">
         <nav className="text-xs text-muted-foreground mb-4">
-          <a href="/" className="hover:text-foreground">Главная</a>
+          <Link to="/" className="hover:text-foreground">Главная</Link>
           <span className="mx-1">/</span>
           <span className="text-foreground">
             {currentCategory ? currentCategory.name : "Каталог"}
           </span>
         </nav>
 
-        <h1 className="text-2xl font-display font-bold mb-6">
-          {currentCategory ? currentCategory.name : searchQuery ? `Результаты: «${searchQuery}»` : "Каталог товаров"}
-        </h1>
+        <div className="flex items-end justify-between mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl font-display font-bold">
+              {currentCategory ? currentCategory.name : searchQuery ? `Результаты: «${searchQuery}»` : "Каталог товаров"}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {filteredProducts?.length ?? 0} товаров
+            </p>
+          </div>
 
-        {/* Filters */}
-        <div className="flex flex-col gap-3 mb-6 p-3 bg-secondary rounded-lg">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                placeholder="Поиск по артикулу, названию, описанию..."
-                className="pl-9 bg-card border-0 text-sm"
-              />
-            </div>
-            <Select value={brandFilter} onValueChange={setBrandFilter}>
-              <SelectTrigger className="w-[140px] sm:w-[160px] bg-card border-0 text-sm">
-                <SlidersHorizontal className="w-3 h-3 mr-1" />
-                <SelectValue placeholder="Бренд" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все бренды</SelectItem>
-                {brands.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2">
+            {/* Mobile filter toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            >
+              <SlidersHorizontal className="w-4 h-4 mr-1" /> Фильтры
+            </Button>
+
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[140px] sm:w-[160px] bg-card border-0 text-sm">
+              <SelectTrigger className="w-[150px] text-sm">
                 <SelectValue placeholder="Сортировка" />
               </SelectTrigger>
               <SelectContent>
@@ -123,79 +233,84 @@ export default function Catalog() {
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground whitespace-nowrap">Цена от</Label>
-              <Input
-                type="number"
-                value={priceMin}
-                onChange={(e) => setPriceMin(e.target.value)}
-                placeholder="0"
-                className="w-24 h-8 bg-card border-0 text-sm"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground whitespace-nowrap">до</Label>
-              <Input
-                type="number"
-                value={priceMax}
-                onChange={(e) => setPriceMax(e.target.value)}
-                placeholder="∞"
-                className="w-24 h-8 bg-card border-0 text-sm"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="inStock"
-                checked={inStockOnly}
-                onCheckedChange={(v) => setInStockOnly(v === true)}
-              />
-              <Label htmlFor="inStock" className="text-xs text-muted-foreground cursor-pointer">В наличии</Label>
-            </div>
-          </div>
         </div>
 
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-card border rounded-lg overflow-hidden">
-                <Skeleton className="aspect-square w-full" />
-                <div className="p-3 space-y-2">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
+        <div className="flex gap-6">
+          {/* Sidebar filters — desktop */}
+          <aside className="hidden lg:block w-64 shrink-0">
+            <div className="bg-card border border-border rounded-xl p-4 sticky top-44">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  placeholder="Поиск..."
+                  className="pl-9 text-sm"
+                />
               </div>
-            ))}
-          </div>
-        ) : filteredProducts && filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredProducts.map((p) => (
-              <ProductCard key={p.id} {...p} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <Package className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-lg text-muted-foreground">Товары не найдены</p>
-            <p className="text-sm text-muted-foreground mt-1">Попробуйте изменить параметры поиска или фильтры</p>
-            {(localSearch || brandFilter !== "all" || priceMin || priceMax || inStockOnly) && (
-              <button
-                className="text-accent hover:underline text-sm mt-3"
-                onClick={() => {
-                  setLocalSearch("");
-                  setBrandFilter("all");
-                  setPriceMin("");
-                  setPriceMax("");
-                  setInStockOnly(false);
-                }}
-              >
-                Сбросить все фильтры
-              </button>
+              <FilterPanel />
+            </div>
+          </aside>
+
+          {/* Mobile filters */}
+          {mobileFiltersOpen && (
+            <div className="lg:hidden fixed inset-0 z-50 bg-black/40" onClick={() => setMobileFiltersOpen(false)}>
+              <div className="absolute right-0 top-0 bottom-0 w-80 max-w-full bg-card p-4 overflow-y-auto animate-slide-in-right" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-semibold">Фильтры</h2>
+                  <Button variant="ghost" size="icon" onClick={() => setMobileFiltersOpen(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
+                    placeholder="Поиск..."
+                    className="pl-9 text-sm"
+                  />
+                </div>
+                <FilterPanel />
+              </div>
+            </div>
+          )}
+
+          {/* Products grid */}
+          <div className="flex-1 min-w-0">
+            {isLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="bg-card border border-border rounded-xl overflow-hidden">
+                    <Skeleton className="aspect-square w-full" />
+                    <div className="p-4 space-y-2">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredProducts && filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredProducts.map((p) => (
+                  <ProductCard key={p.id} {...p} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <Package className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-lg text-muted-foreground">Товары не найдены</p>
+                <p className="text-sm text-muted-foreground mt-1">Попробуйте изменить параметры поиска или фильтры</p>
+                {hasActiveFilters && (
+                  <Button variant="outline" size="sm" className="mt-4" onClick={resetFilters}>
+                    <X className="w-3.5 h-3.5 mr-1" /> Сбросить все фильтры
+                  </Button>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     </Layout>
   );
