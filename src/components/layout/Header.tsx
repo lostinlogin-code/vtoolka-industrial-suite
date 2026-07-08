@@ -12,6 +12,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import logoAsset from "@/assets/vtoolka-logo.png.asset.json";
 
 type IconType = ComponentType<{ className?: string }>;
 
@@ -73,14 +74,8 @@ export default function Header() {
 
       {/* Main header */}
       <div className="container flex items-center gap-4 py-3">
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center shadow-sm">
-            <Wrench className="w-5 h-5 text-accent-foreground" />
-          </div>
-          <div>
-            <span className="font-display font-bold text-lg leading-none text-foreground">vtoolka</span>
-            <span className="block text-[10px] text-muted-foreground leading-none mt-0.5">промышленный инструмент</span>
-          </div>
+        <Link to="/" className="flex items-center shrink-0" aria-label="vtoolka — на главную">
+          <img src={logoAsset.url} alt="vtoolka" className="h-10 md:h-11 w-auto object-contain" />
         </Link>
 
         {/* Search */}
