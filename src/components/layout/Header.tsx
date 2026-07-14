@@ -75,7 +75,7 @@ export default function Header() {
       {/* Main header */}
       <div className="container flex items-center gap-4 py-3">
         <Link to="/" className="flex items-center shrink-0" aria-label="vtoolka — на главную">
-          <img src={logoAsset.url} alt="vtoolka" className="h-10 md:h-11 w-auto object-contain" />
+          <Logo />
         </Link>
 
         {/* Search */}
