@@ -12,7 +12,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import logoAsset from "@/assets/vtoolka-logo.png.asset.json";
+import Logo from "@/components/layout/Logo";
 
 type IconType = ComponentType<{ className?: string }>;
 
@@ -75,7 +75,7 @@ export default function Header() {
       {/* Main header */}
       <div className="container flex items-center gap-4 py-3">
         <Link to="/" className="flex items-center shrink-0" aria-label="vtoolka — на главную">
-          <img src={logoAsset.url} alt="vtoolka" className="h-10 md:h-11 w-auto object-contain" />
+          <Logo />
         </Link>
 
         {/* Search */}
