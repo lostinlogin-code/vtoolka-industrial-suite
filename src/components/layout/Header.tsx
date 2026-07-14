@@ -12,7 +12,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import logoAsset from "@/assets/vtoolka-logo.png.asset.json";
+import Logo from "@/components/layout/Logo";
 
 type IconType = ComponentType<{ className?: string }>;
 
